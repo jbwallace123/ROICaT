@@ -499,7 +499,7 @@ class Aligner(util.ROICaT_Module):
                 else:
                     warnings.warn('Warning: Could not find a path to alignment for some images after one round of path finding. Now doing a dense search for alignment between all images.')
                     idx_remaining = sorted(list(set(np.arange(len(ims_moving))) - set(idx_not_aligned)))
-                    print(f"Finding alignment between remaining images and all other images: {idx_remaining}...") if self._verbose else None
+                    print(f"Finding alignment between remaining images and all other images: {idx_remaining}...")
                     ## Register the images in idx to the template
                     warp_matrices_all_to_template_new, warp_matrices_all_to_all, alignment_all_to_all = update_warps_to_template(
                         idx=idx_remaining, 
@@ -778,7 +778,12 @@ class Aligner(util.ROICaT_Module):
             squeeze_output = False
         if not isinstance(remappingIdx, (list, tuple)):
             if isinstance(remappingIdx, np.ndarray):
-                remappingIdx = [remappingIdx,]
+                if remappingIdx.ndim == 3:
+                    remappingIdx = [remappingIdx,]
+                elif (remappingIdx.ndim == 4) and (remappingIdx.shape[0] == len(ims_moving)):
+                    remappingIdx = [remappingIdx[ii] for ii in range(remappingIdx.shape[0])]
+                else:
+                    raise ValueError(f"remappingIdx must be a list of remapping indices arrays (list of length len(images) with shape (H, W, 2)). Found an array with shape {remappingIdx.shape}.")
             else:
                 raise ValueError('remappingIdx must be a list of remapping indices.')
         
